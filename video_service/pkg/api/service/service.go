@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
@@ -92,6 +94,17 @@ func (c *VideoServer) StreamVideo(req *pb.StreamVideoRequest, stream pb.VideoSer
 		}
 	}
 	return nil
+}
+
+func (c *VideoServer) FindAllVideo(ctx context.Context, req *pb.FindAllRequest) (*pb.FindAllResponse, error) {
+	res, err := c.Repo.FindAllVideo()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindAllResponse{
+		Status: http.StatusOK,
+		Videos: res,
+	}, nil
 }
 
 func CreatePlaylistAndSegments(filePath string, folderPath string) error {

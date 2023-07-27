@@ -61,18 +61,6 @@ func (c *videoClient) UploadVideo(ctx context.Context, file *multipart.FileHeade
 	}
 
 	return response, nil
-	// filedata, err1 := io.ReadAll(upLoadfile)
-	// if err1 != nil {
-	// 	return nil, err1
-	// }
-	// res, err2 := c.Server.UploadVideo(ctx, &pb.UploadVideoRequest{
-	// 	Filename: file.Filename,
-	// 	Data:     filedata,
-	// })
-	// if err2 != nil {
-	// 	return nil, err2
-	// }
-	// return res, nil
 }
 
 func (c *videoClient) StreamVideo(ctx context.Context, filename, playlist string) (pb.VideoService_StreamVideoClient, error) {
@@ -80,6 +68,14 @@ func (c *videoClient) StreamVideo(ctx context.Context, filename, playlist string
 		Videoid:  filename,
 		Playlist: playlist,
 	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (c *videoClient) FindAllVideo(ctx context.Context) (*pb.FindAllResponse, error) {
+	res, err := c.Server.FindAllVideo(ctx, &pb.FindAllRequest{})
 	if err != nil {
 		return nil, err
 	}

@@ -8,4 +8,5 @@ import (
 func RegisterVideoRoutes(api *gin.RouterGroup, videoHandler handler.VideoHandler) {
 	api.POST("/upload", videoHandler.UploadVideo)
 	api.GET("/stream/:video_id/:playlist", videoHandler.StreamVideo)
+	api.GET("/video/all", videoHandler.FindAllVideo)
 }

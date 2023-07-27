@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type VideoServiceClient interface {
 	UploadVideo(ctx context.Context, opts ...grpc.CallOption) (VideoService_UploadVideoClient, error)
 	StreamVideo(ctx context.Context, in *StreamVideoRequest, opts ...grpc.CallOption) (VideoService_StreamVideoClient, error)
+	FindAllVideo(ctx context.Context, in *FindAllRequest, opts ...grpc.CallOption) (*FindAllResponse, error)
 }
 
 type videoServiceClient struct {
@@ -100,12 +101,22 @@ func (x *videoServiceStreamVideoClient) Recv() (*StreamVideoResponse, error) {
 	return m, nil
 }
 
+func (c *videoServiceClient) FindAllVideo(ctx context.Context, in *FindAllRequest, opts ...grpc.CallOption) (*FindAllResponse, error) {
+	out := new(FindAllResponse)
+	err := c.cc.Invoke(ctx, "/pb.VideoService/FindAllVideo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VideoServiceServer is the server API for VideoService service.
 // All implementations must embed UnimplementedVideoServiceServer
 // for forward compatibility
 type VideoServiceServer interface {
 	UploadVideo(VideoService_UploadVideoServer) error
 	StreamVideo(*StreamVideoRequest, VideoService_StreamVideoServer) error
+	FindAllVideo(context.Context, *FindAllRequest) (*FindAllResponse, error)
 	mustEmbedUnimplementedVideoServiceServer()
 }
 
@@ -118,6 +129,9 @@ func (UnimplementedVideoServiceServer) UploadVideo(VideoService_UploadVideoServe
 }
 func (UnimplementedVideoServiceServer) StreamVideo(*StreamVideoRequest, VideoService_StreamVideoServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamVideo not implemented")
+}
+func (UnimplementedVideoServiceServer) FindAllVideo(context.Context, *FindAllRequest) (*FindAllResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindAllVideo not implemented")
 }
 func (UnimplementedVideoServiceServer) mustEmbedUnimplementedVideoServiceServer() {}
 
@@ -179,13 +193,36 @@ func (x *videoServiceStreamVideoServer) Send(m *StreamVideoResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _VideoService_FindAllVideo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindAllRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoServiceServer).FindAllVideo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.VideoService/FindAllVideo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoServiceServer).FindAllVideo(ctx, req.(*FindAllRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VideoService_ServiceDesc is the grpc.ServiceDesc for VideoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var VideoService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.VideoService",
 	HandlerType: (*VideoServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "FindAllVideo",
+			Handler:    _VideoService_FindAllVideo_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "UploadVideo",

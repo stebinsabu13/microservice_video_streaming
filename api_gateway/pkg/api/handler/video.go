@@ -70,3 +70,15 @@ func (cr *VideoHandler) StreamVideo(c *gin.Context) {
 		c.Writer.Write(resp.VideoChunk)
 	}
 }
+
+func (cr *VideoHandler) FindAllVideo(c *gin.Context) {
+	res, err := cr.Client.FindAllVideo(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{
+			"message": "failed to get the videos",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(int(res.Status), &res)
+}
