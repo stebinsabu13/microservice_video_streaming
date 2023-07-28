@@ -36,6 +36,7 @@ func (c *videoClient) UploadVideo(ctx context.Context, file *multipart.FileHeade
 		return nil, err
 	}
 	defer upLoadfile.Close()
+	//getting the stream object
 	stream, _ := c.Server.UploadVideo(ctx)
 	chunkSize := 4096 // Set your desired chunk size
 	buffer := make([]byte, chunkSize)
@@ -55,6 +56,7 @@ func (c *videoClient) UploadVideo(ctx context.Context, file *multipart.FileHeade
 			return nil, err
 		}
 	}
+	//the final response is recieved and the streaming is closed
 	response, err := stream.CloseAndRecv()
 	if err != nil {
 		return nil, err

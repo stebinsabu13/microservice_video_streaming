@@ -29,6 +29,7 @@ func NewVideoServer(repo interfaces.VideoRepo) pb.VideoServiceServer {
 }
 
 func (c *VideoServer) UploadVideo(stream pb.VideoService_UploadVideoServer) error {
+	//making a folder and a file
 	fileuid := uuid.New()
 	fileName := fileuid.String()
 	folderpath := storageLocation + "/" + fileName
@@ -41,6 +42,7 @@ func (c *VideoServer) UploadVideo(stream pb.VideoService_UploadVideoServer) erro
 		return errors.New("failed to create file")
 	}
 	defer newfile.Close()
+	//receiving from the streamed bytes from the api_gateway
 	for {
 		chunk, err := stream.Recv()
 		if err == io.EOF {
@@ -54,12 +56,15 @@ func (c *VideoServer) UploadVideo(stream pb.VideoService_UploadVideoServer) erro
 			return err
 		}
 	}
+
 	chanerr := make(chan error, 2)
 	go func() {
+		//call to segment the file to hls format using ffmpeg
 		err := CreatePlaylistAndSegments(filepath, folderpath)
 		chanerr <- err
 	}()
 	go func() {
+		//saving the video id to a database
 		err := c.Repo.CreateVideoid(fileName)
 		chanerr <- err
 	}()
@@ -69,7 +74,12 @@ func (c *VideoServer) UploadVideo(stream pb.VideoService_UploadVideoServer) erro
 			return err
 		}
 	}
-	return stream.SendAndClose(&pb.UploadVideoResponse{Message: "Video successfully uploaded."})
+	// sending a response and closing the sending stream of bytes
+	return stream.SendAndClose(&pb.UploadVideoResponse{
+		Status:  http.StatusOK,
+		Message: "Video successfully uploaded.",
+		VideoId: fileName,
+	})
 }
 
 func (c *VideoServer) StreamVideo(req *pb.StreamVideoRequest, stream pb.VideoService_StreamVideoServer) error {
@@ -96,6 +106,7 @@ func (c *VideoServer) StreamVideo(req *pb.StreamVideoRequest, stream pb.VideoSer
 	return nil
 }
 
+// to find all the video id
 func (c *VideoServer) FindAllVideo(ctx context.Context, req *pb.FindAllRequest) (*pb.FindAllResponse, error) {
 	res, err := c.Repo.FindAllVideo()
 	if err != nil {
@@ -107,6 +118,7 @@ func (c *VideoServer) FindAllVideo(ctx context.Context, req *pb.FindAllRequest) 
 	}, nil
 }
 
+// function to segment the video using ffmpeg and storing it as playlist
 func CreatePlaylistAndSegments(filePath string, folderPath string) error {
 	segmentDuration := 3
 	ffmpegCmd := exec.Command(

@@ -1,0 +1,49 @@
+version: '3'
+
+name: microservice_video_streaming
+services:
+  db-video:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - mynet
+    ports:
+      - 8082:5432
+    volumes:
+      - video-db:/var/lib/postgresql/data
+
+  video_service:
+    image: stebin13/microsvc_video_streaming/video_service
+    env_file:
+      - ./video_service/.env
+    networks:
+      - mynet
+    ports:
+      - 8081:8081
+    volumes:
+      - ./video_service:/usr/src/app
+    depends_on:
+      - db-video
+
+  api_gateway:
+    image: stebin13/microsvc_video_streaming/api_gateway
+    env_file:
+      - ./api_gateway/.env
+    networks:
+      - mynet
+    ports:
+      - 8080:8080
+    volumes:
+      - ./api_gateway:/usr/src/app
+    depends_on:
+      - video_service
+
+volumes:
+  video-db:
+
+networks:
+  mynet:
+    driver: bridge

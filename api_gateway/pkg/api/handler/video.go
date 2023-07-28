@@ -52,6 +52,7 @@ func (cr *VideoHandler) StreamVideo(c *gin.Context) {
 		return
 	}
 	for {
+		//reciving the streaming bytes send from the video service
 		resp, err := stream.Recv()
 		if err == io.EOF {
 			break
